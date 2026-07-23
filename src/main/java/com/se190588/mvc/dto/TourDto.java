@@ -27,13 +27,13 @@ public class TourDto {
     private String destination;
 
     @NotNull(message = "Capacity is required")
-    @Min(value = 1, message = "The Capacity must be in 1...1000 character")
-    @Max(value = 1000, message = "The Capacity must be in 1...1000 character")
+    @Min(value = 1, message = "The Capacity must be in 1...1000")
+    @Max(value = 1000, message = "The Capacity must be in 1...1000")
     private Integer capacity;
 
     @NotNull(message = "Duration is required")
-    @Min(value = 1, message = "The Duration must be in 1...300 character")
-    @Max(value = 300, message = "The Duration must be in 1...300 character")
+    @Min(value = 1, message = "The Duration must be in 1...300")
+    @Max(value = 300, message = "The Duration must be in 1...300")
     private Integer duration;
 
     @NotNull(message = "Start date is required")
@@ -53,12 +53,23 @@ public class TourDto {
     // Database chi luu AC/IN/DR, con man hinh se show Active/Inactive/Draft.
     private String statusDesc;
 
+    // Luu URL anh sau khi upload len Cloudinary; database khong luu file anh truc tiep.
+    private String imageUrl;
+
     public String getStatusDesc() {
         return statusDesc;
     }
 
     public void setStatusDesc(String statusDesc) {
         this.statusDesc = statusDesc;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public Integer getId() {

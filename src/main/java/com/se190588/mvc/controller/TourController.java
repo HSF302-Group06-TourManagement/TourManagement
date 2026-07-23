@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.beans.PropertyEditorSupport;
@@ -90,6 +91,7 @@ public class TourController {
     @PostMapping("/tours/add")
     public String addTour(@Valid @ModelAttribute("tour") TourDto tourDto,
                           BindingResult bindingResult,
+                          @RequestParam(name = "imageFile", required = false) MultipartFile imageFile,
                           Model model,
                           RedirectAttributes redirectAttributes) {
         validateStartDate(tourDto, bindingResult);
@@ -100,7 +102,7 @@ public class TourController {
             return "add";
         }
 
-        tourService.createTour(tourDto);
+        tourService.createTour(tourDto, imageFile);
         // Flash attribute chi ton tai trong lan redirect ke tiep, phu hop de show thong bao thanh cong.
         redirectAttributes.addFlashAttribute("successMessage", "Add successfully");
         return "redirect:/tours";
@@ -118,6 +120,7 @@ public class TourController {
     public String updateTour(@PathVariable Integer id,
                              @Valid @ModelAttribute("tour") TourDto tourDto,
                              BindingResult bindingResult,
+                             @RequestParam(name = "imageFile", required = false) MultipartFile imageFile,
                              Model model,
                              RedirectAttributes redirectAttributes) {
         validateStartDate(tourDto, bindingResult);
@@ -129,7 +132,7 @@ public class TourController {
             return "update";
         }
 
-        tourService.updateTour(id, tourDto);
+        tourService.updateTour(id, tourDto, imageFile);
         // Sau khi update thanh cong, quay ve list va hien thong bao theo yeu cau.
         redirectAttributes.addFlashAttribute("successMessage", "Update successfully");
         return "redirect:/tours";

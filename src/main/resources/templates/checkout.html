@@ -22,11 +22,15 @@
             <div class="col-md-5">
                 <div class="border rounded p-3 h-100">
                     <h3 class="h5 mb-3">Tour Summary</h3>
+                    <img class="tour-summary-image mb-3"
+                         th:if="${tour.imageUrl != null and !tour.imageUrl.isBlank()}"
+                         th:src="${tour.imageUrl}" alt="Tour image">
                     <p class="mb-2"><strong>Name:</strong> <span th:text="${tour.tourName}"></span></p>
                     <p class="mb-2"><strong>Destination:</strong> <span th:text="${tour.destination}"></span></p>
+                    <p class="mb-2"><strong>Capacity:</strong> <span th:text="${tour.capacity}"></span></p>
                     <p class="mb-2"><strong>Duration:</strong> <span th:text="${tour.duration + ' days'}"></span></p>
                     <p class="mb-2"><strong>Start Date:</strong> <span th:text="${#temporals.format(tour.startDate, 'dd/MM/yyyy')}"></span></p>
-                    <p class="mb-0"><strong>Price:</strong> <span th:text="${#numbers.formatDecimal(tour.price, 1, 'COMMA', 2, 'POINT') + ' $'}"></span></p>
+                    <p class="mb-0"><strong>Price:</strong> <span th:text="${#numbers.formatDecimal(tour.price, 1, 'COMMA', 2, 'POINT') + ' VND'}"></span></p>
                 </div>
             </div>
 
@@ -56,6 +60,7 @@
                     <div class="col-md-4">
                         <label for="quantity" class="form-label">Quantity</label>
                         <input type="text" id="quantity" th:field="*{quantity}" class="form-control"
+                               th:attr="max=${tour.capacity}"
                                th:classappend="${#fields.hasErrors('quantity')} ? 'is-invalid'">
                         <div class="invalid-feedback" th:errors="*{quantity}"></div>
                     </div>

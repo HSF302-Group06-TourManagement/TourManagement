@@ -15,7 +15,8 @@
         <h2 class="sub-title">Add Tour</h2>
 
         <!-- th:object gan form voi model attribute "tour" trong controller. -->
-        <form th:action="@{/tours/add}" th:object="${tour}" method="post" class="row g-3" novalidate>
+        <form th:action="@{/tours/add}" th:object="${tour}" method="post" enctype="multipart/form-data"
+              class="row g-3" novalidate>
             <div class="col-md-6">
                 <label for="tourName" class="form-label">Tour Name</label>
                 <input type="text" id="tourName" th:field="*{tourName}" class="form-control"
@@ -72,6 +73,12 @@
                     <option th:each="item : ${statuses}" th:value="${item.status()}" th:text="${item.statusDesc()}"></option>
                 </select>
                 <div class="invalid-feedback" th:errors="*{status}"></div>
+            </div>
+
+            <div class="col-12">
+                <label for="imageFile" class="form-label">Tour Image</label>
+                <!-- Anh duoc upload len Cloudinary, database chi luu URL tra ve. -->
+                <input type="file" id="imageFile" name="imageFile" class="form-control" accept="image/*">
             </div>
 
             <div class="col-12">

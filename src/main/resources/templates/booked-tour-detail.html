@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Booked Tour Detail</title>
+    <link rel="stylesheet" th:href="@{/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<div class="container">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="custom-panel mt-4">
+        <h2 class="sub-title">Booked Tour Detail</h2>
+
+        <div class="mb-3" th:if="${booking.tour.imageUrl != null and !booking.tour.imageUrl.isBlank()}">
+            <img class="tour-detail-image" th:src="${booking.tour.imageUrl}" alt="Booked tour image">
+        </div>
+
+        <dl class="row">
+            <dt class="col-sm-3">Customer Name</dt>
+            <dd class="col-sm-9" th:text="${booking.customerName}"></dd>
+
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9" th:text="${booking.customerEmail}"></dd>
+
+            <dt class="col-sm-3">Phone</dt>
+            <dd class="col-sm-9" th:text="${booking.customerPhone}"></dd>
+
+            <dt class="col-sm-3">Paid Amount</dt>
+            <dd class="col-sm-9" th:text="${booking.amount}"></dd>
+
+            <dt class="col-sm-3">Quantity</dt>
+            <dd class="col-sm-9" th:text="${booking.quantity}"></dd>
+
+            <dt class="col-sm-3">Tour Name</dt>
+            <dd class="col-sm-9" th:text="${booking.tour.tourName}"></dd>
+
+            <dt class="col-sm-3">Destination</dt>
+            <dd class="col-sm-9" th:text="${booking.tour.destination}"></dd>
+
+            <dt class="col-sm-3">Duration</dt>
+            <dd class="col-sm-9" th:text="${booking.tour.duration + ' days'}"></dd>
+
+            <dt class="col-sm-3">Start Date</dt>
+            <dd class="col-sm-9" th:text="${#temporals.format(booking.tour.startDate, 'dd/MM/yyyy')}"></dd>
+
+            <dt class="col-sm-3">Tour Price</dt>
+            <dd class="col-sm-9" th:text="${#numbers.formatDecimal(booking.tour.price, 1, 'COMMA', 2, 'POINT') + ' VND'}"></dd>
+        </dl>
+
+        <a class="btn btn-primary" th:href="@{/tours/{id}(id=${booking.tour.id})}">View Tour</a>
+        <a class="btn btn-secondary" th:href="@{/tours}">Back to List</a>
+    </div>
+</div>
+<script th:src="@{/bootstrap.bundle.js}"></script>
+</body>
+</html>

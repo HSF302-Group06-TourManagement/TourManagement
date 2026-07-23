@@ -49,6 +49,10 @@ public class Tour {
     @Column(name = "status", nullable = false, length = 10)
     private String status;
 
+    @Size(max = 500)
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     public Integer getId() {
         return id;
     }
@@ -111,6 +115,14 @@ public class Tour {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
 }

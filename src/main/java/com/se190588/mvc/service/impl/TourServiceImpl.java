@@ -4,9 +4,11 @@ import com.se190588.mvc.dto.TourDto;
 import com.se190588.mvc.dto.TourStatus;
 import com.se190588.mvc.entity.Tour;
 import com.se190588.mvc.repository.TourRepository;
+import com.se190588.mvc.service.CloudinaryService;
 import com.se190588.mvc.service.TourService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -16,6 +18,9 @@ public class TourServiceImpl implements TourService {
 
     @Autowired
     private TourRepository tourRepo;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     @Override
     public List<TourDto> getAllTours() {
@@ -48,7 +53,10 @@ public class TourServiceImpl implements TourService {
     }
 
     @Override
-    public TourDto createTour(TourDto tourDto) {
+    public TourDto createTour(TourDto tourDto, MultipartFile imageFile) {
+        String imageUrl = cloudinaryService.uploadTourImage(imageFile);
+        tourDto.setImageUrl(imageUrl);
+
         // Tao entity moi nen khong set id; database tu sinh id bang IDENTITY.
         Tour tour = toEntity(tourDto);
         tour.setId(null);
@@ -56,10 +64,11 @@ public class TourServiceImpl implements TourService {
     }
 
     @Override
-    public TourDto updateTour(Integer id, TourDto tourDto) {
+    public TourDto updateTour(Integer id, TourDto tourDto, MultipartFile imageFile) {
         // Kiem tra ban ghi ton tai truoc khi update de tranh save thanh record moi sai y nghia.
         Tour existingTour = tourRepo.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Tour not found with id: " + id));
+        String newImageUrl = cloudinaryService.uploadTourImage(imageFile);
 
         existingTour.setTourName(tourDto.getTourName());
         existingTour.setDestination(tourDto.getDestination());
@@ -68,6 +77,10 @@ public class TourServiceImpl implements TourService {
         existingTour.setStartDate(tourDto.getStartDate());
         existingTour.setPrice(tourDto.getPrice());
         existingTour.setStatus(tourDto.getStatus());
+        if (newImageUrl != null) {
+            // Neu nguoi dung chon anh moi thi thay URL moi, neu khong thi giu anh cu.
+            existingTour.setImageUrl(newImageUrl);
+        }
 
         return toDto(tourRepo.save(existingTour));
     }
@@ -110,6 +123,7 @@ public class TourServiceImpl implements TourService {
         tourDto.setPrice(tour.getPrice());
         tourDto.setStatus(tour.getStatus());
         tourDto.setStatusDesc(getTourStatus(tour.getStatus()));
+        tourDto.setImageUrl(tour.getImageUrl());
 
         return tourDto;
     }
@@ -125,6 +139,7 @@ public class TourServiceImpl implements TourService {
         tour.setStartDate(tourDto.getStartDate());
         tour.setPrice(tourDto.getPrice());
         tour.setStatus(tourDto.getStatus());
+        tour.setImageUrl(tourDto.getImageUrl());
 
         return tour;
     }

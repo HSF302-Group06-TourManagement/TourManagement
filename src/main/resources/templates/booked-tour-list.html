@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Booked Tour List</title>
+    <link rel="stylesheet" th:href="@{/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<div class="container">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="custom-panel mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="sub-title mb-0">Booked Tour Detail</h2>
+            <a class="btn btn-secondary" th:href="@{/tours}">Back to List</a>
+        </div>
+
+        <!-- Neu chua co booking thanh cong trong phien chay hien tai thi hien thi thong bao rieng. -->
+        <div class="alert alert-info" th:if="${#lists.isEmpty(bookings)}">
+            No paid booked tour found.
+        </div>
+
+        <div class="table-responsive" th:if="${!#lists.isEmpty(bookings)}">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-custom-header">
+                <tr>
+                    <th># No</th>
+                    <th>Customer</th>
+                    <th>Email</th>
+                    <th>Paid Amount</th>
+                    <th>Tour</th>
+                    <th>Quantity</th>
+                    <th class="text-center">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- iterStat.count dung de danh so thu tu booking da thanh toan thanh cong. -->
+                <tr th:each="booking, iterStat : ${bookings}">
+                    <td th:text="${iterStat.count}"></td>
+                    <td th:text="${booking.customerName}"></td>
+                    <td th:text="${booking.customerEmail}"></td>
+                    <td th:text="${booking.amount}"></td>
+                    <td th:text="${booking.tour.tourName}"></td>
+                    <td th:text="${booking.quantity}"></td>
+                    <td class="text-center">
+                        <a class="btn btn-sm btn-info text-white"
+                           th:href="@{/payment/booked-tour/{txnRef}(txnRef=${booking.transactionRef})}">
+                            Detail
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script th:src="@{/bootstrap.bundle.js}"></script>
+</body>
+</html>

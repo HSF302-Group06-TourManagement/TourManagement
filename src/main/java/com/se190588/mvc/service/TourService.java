@@ -5,6 +5,8 @@ import com.se190588.mvc.dto.TourStatus;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public interface TourService {
 
     // Lay danh sach tour de show tren trang list.html.
@@ -18,10 +20,10 @@ public interface TourService {
     TourDto getTourById(Integer id);
 
     // Tao moi tour tu du lieu nguoi dung nhap o add.html.
-    TourDto createTour(TourDto tourDto);
+    TourDto createTour(TourDto tourDto, MultipartFile imageFile);
 
     // Cap nhat tour dang co. Id lay tu URL de dam bao update dung ban ghi.
-    TourDto updateTour(Integer id, TourDto tourDto);
+    TourDto updateTour(Integer id, TourDto tourDto, MultipartFile imageFile);
 
     // Xoa tour theo id.
     void deleteTour(Integer id);

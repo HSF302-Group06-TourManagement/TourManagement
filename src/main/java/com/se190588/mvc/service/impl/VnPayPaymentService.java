@@ -1,10 +1,14 @@
 package com.se190588.mvc.service.impl;
 
 import com.se190588.mvc.dto.CheckoutDto;
+import com.se190588.mvc.dto.BookedTourDetailDto;
 import com.se190588.mvc.dto.PaymentResultDto;
 import com.se190588.mvc.dto.TourDto;
+import com.se190588.mvc.entity.Tour;
+import com.se190588.mvc.repository.TourRepository;
 import com.se190588.mvc.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -17,16 +21,30 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class VnPayPaymentService implements PaymentService {
 
+    private static final Pattern TRANSACTION_REF_PATTERN = Pattern.compile("^TOUR(\\d+)Q(\\d+)T\\d+$");
+
+    private final Set<String> processedTransactionRefs = ConcurrentHashMap.newKeySet();
+    private final Map<String, BookedTourDetailDto> bookedTourDetails = new ConcurrentHashMap<>();
+
+    @Autowired
+    private TourRepository tourRepository;
+
     @Value("${payment.vnpay.enabled:false}")
     private boolean vnPayEnabled;
 
-    @Value("${VNPAY_PAY_URL:}")
+    @Value("${payment.vnpay.pay-url:}")
     private String payUrl;
 
     @Value("${payment.vnpay.return-url:}")
@@ -42,10 +60,13 @@ public class VnPayPaymentService implements PaymentService {
     public String createPaymentUrl(TourDto tour, CheckoutDto checkoutDto, HttpServletRequest request) {
         BigDecimal totalAmount = BigDecimal.valueOf(tour.getPrice())
                 .multiply(BigDecimal.valueOf(checkoutDto.getQuantity()));
+        String transactionRef = createTransactionRef(tour.getId(), checkoutDto.getQuantity());
+        savePendingBookedTourDetail(transactionRef, tour, checkoutDto,
+                totalAmount.setScale(2, RoundingMode.HALF_UP).toPlainString() + " VND");
 
         if (!isVnPayEnabled()) {
             return UriComponentsBuilder.fromPath("/payment/demo-success")
-                    .queryParam("txnRef", createTransactionRef(tour.getId()))
+                    .queryParam("txnRef", transactionRef)
                     .queryParam("amount", totalAmount.setScale(2, RoundingMode.HALF_UP).toPlainString())
                     .toUriString();
         }
@@ -56,7 +77,7 @@ public class VnPayPaymentService implements PaymentService {
         params.put("vnp_TmnCode", tmnCode);
         params.put("vnp_Amount", totalAmount.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).toPlainString());
         params.put("vnp_CurrCode", "VND");
-        params.put("vnp_TxnRef", createTransactionRef(tour.getId()));
+        params.put("vnp_TxnRef", transactionRef);
         params.put("vnp_OrderInfo", "Payment for tour " + tour.getTourName());
         params.put("vnp_OrderType", "other");
         params.put("vnp_Locale", "vn");
@@ -92,7 +113,12 @@ public class VnPayPaymentService implements PaymentService {
         result.setTransactionRef(params.get("vnp_TxnRef"));
         result.setResponseCode(responseCode);
         result.setAmount(formatVnPayAmount(params.get("vnp_Amount")));
+        parseBookingInfo(result.getTransactionRef()).ifPresent(info -> result.setTourId(info.tourId()));
         result.setMessage(result.isSuccess() ? "Payment successfully" : "Payment failed or invalid signature");
+        if (result.isSuccess()) {
+            markBookingPaid(result);
+            decreaseTourCapacity(result.getTransactionRef());
+        }
         return result;
     }
 
@@ -103,18 +129,98 @@ public class VnPayPaymentService implements PaymentService {
         result.setValidSignature(true);
         result.setTransactionRef(transactionRef);
         result.setResponseCode("DEMO");
-        result.setAmount(amount + " $");
+        result.setAmount(amount + " VND");
+        parseBookingInfo(transactionRef).ifPresent(info -> result.setTourId(info.tourId()));
         result.setMessage("Payment successfully in demo mode");
+        markBookingPaid(result);
+        decreaseTourCapacity(transactionRef);
         return result;
     }
 
     @Override
-    public boolean isVnPayEnabled() {
-        return vnPayEnabled && !tmnCode.isBlank() && !hashSecret.isBlank();
+    public BookedTourDetailDto getBookedTourDetail(String transactionRef) {
+        return bookedTourDetails.get(transactionRef);
     }
 
-    private String createTransactionRef(Integer tourId) {
-        return "TOUR" + tourId + System.currentTimeMillis();
+    @Override
+    public List<BookedTourDetailDto> getPaidBookedTourDetails() {
+        // Chi hien thi cac booking da thanh toan thanh cong, khong hien cac giao dich dang pending.
+        return bookedTourDetails.values().stream()
+                .filter(BookedTourDetailDto::isPaid)
+                .toList();
+    }
+
+    @Override
+    public boolean isVnPayEnabled() {
+        return vnPayEnabled && !payUrl.isBlank() && !tmnCode.isBlank() && !hashSecret.isBlank();
+    }
+
+    private void savePendingBookedTourDetail(String transactionRef, TourDto tour, CheckoutDto checkoutDto, String amount) {
+        BookedTourDetailDto detail = new BookedTourDetailDto();
+        detail.setTransactionRef(transactionRef);
+        detail.setCustomerName(checkoutDto.getCustomerName());
+        detail.setCustomerEmail(checkoutDto.getCustomerEmail());
+        detail.setCustomerPhone(checkoutDto.getCustomerPhone());
+        detail.setQuantity(checkoutDto.getQuantity());
+        detail.setAmount(amount);
+        detail.setPaid(false);
+        detail.setTour(tour);
+        bookedTourDetails.put(transactionRef, detail);
+    }
+
+    private void markBookingPaid(PaymentResultDto result) {
+        BookedTourDetailDto detail = bookedTourDetails.get(result.getTransactionRef());
+        if (detail != null) {
+            detail.setAmount(result.getAmount());
+            detail.setPaid(true);
+        }
+    }
+
+    private String createTransactionRef(Integer tourId, Integer quantity) {
+        // Ma giao dich luu tourId va quantity de khi thanh toan thanh cong co the tru capacity tuong ung.
+        return "TOUR" + tourId + "Q" + quantity + "T" + System.currentTimeMillis();
+    }
+
+    private void decreaseTourCapacity(String transactionRef) {
+        Optional<BookingInfo> bookingInfo = parseBookingInfo(transactionRef);
+        if (bookingInfo.isEmpty() || !processedTransactionRefs.add(transactionRef)) {
+            return;
+        }
+
+        tourRepository.findById(bookingInfo.get().tourId()).ifPresent(tour -> {
+            Integer currentCapacity = tour.getCapacity();
+            Integer bookedQuantity = bookingInfo.get().quantity();
+            if (currentCapacity != null && bookedQuantity != null && currentCapacity >= bookedQuantity) {
+                tour.setCapacity(currentCapacity - bookedQuantity);
+                tourRepository.save(tour);
+                updateBookedTourCapacity(transactionRef, tour);
+            }
+        });
+    }
+
+    private void updateBookedTourCapacity(String transactionRef, Tour tour) {
+        BookedTourDetailDto detail = bookedTourDetails.get(transactionRef);
+        if (detail == null || detail.getTour() == null) {
+            return;
+        }
+        detail.getTour().setCapacity(tour.getCapacity());
+    }
+
+    private Optional<BookingInfo> parseBookingInfo(String transactionRef) {
+        if (transactionRef == null || transactionRef.isBlank()) {
+            return Optional.empty();
+        }
+
+        Matcher matcher = TRANSACTION_REF_PATTERN.matcher(transactionRef);
+        if (!matcher.matches()) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(new BookingInfo(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2))));
+        } catch (NumberFormatException exception) {
+            return Optional.empty();
+        }
     }
 
     private String getClientIp(HttpServletRequest request) {
@@ -200,5 +306,8 @@ public class VnPayPaymentService implements PaymentService {
         } catch (Exception exception) {
             throw new IllegalStateException("Cannot create payment signature", exception);
         }
+    }
+
+    private record BookingInfo(Integer tourId, Integer quantity) {
     }
 }

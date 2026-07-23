@@ -1,6 +1,7 @@
 package com.se190588.mvc.controller;
 
 import com.se190588.mvc.dto.CheckoutDto;
+import com.se190588.mvc.dto.BookedTourDetailDto;
 import com.se190588.mvc.dto.PaymentResultDto;
 import com.se190588.mvc.dto.TourDto;
 import com.se190588.mvc.service.PaymentService;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.NoSuchElementException;
 
 @Controller
 public class PaymentController {
@@ -41,6 +44,7 @@ public class PaymentController {
                            HttpServletRequest request,
                            Model model) {
         TourDto tour = tourService.getTourById(id);
+        validateQuantityAgainstCapacity(checkoutDto, tour, bindingResult);
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("tour", tour);
@@ -62,5 +66,41 @@ public class PaymentController {
     public String demoSuccess(@RequestParam String txnRef, @RequestParam String amount, Model model) {
         model.addAttribute("result", paymentService.createDemoResult(txnRef, amount));
         return "payment-result";
+    }
+
+    @GetMapping("/payment/booked-tour/{txnRef}")
+    public String bookedTourDetail(@PathVariable String txnRef, Model model) {
+        BookedTourDetailDto detail = paymentService.getBookedTourDetail(txnRef);
+        if (detail == null || !detail.isPaid()) {
+            throw new NoSuchElementException("Booked tour detail not found");
+        }
+
+        model.addAttribute("booking", detail);
+        return "booked-tour-detail";
+    }
+
+    @GetMapping("/payment/booked-tours")
+    public String bookedTourList(Model model) {
+        // Trang nay gom cac booking da thanh toan thanh cong de nguoi dung xem lai tu Tour List.
+        model.addAttribute("bookings", paymentService.getPaidBookedTourDetails());
+        return "booked-tour-list";
+    }
+
+    private void validateQuantityAgainstCapacity(CheckoutDto checkoutDto, TourDto tour, BindingResult bindingResult) {
+        // Neu quantity da loi required/type/min thi khong validate tiep de tranh hien trung loi.
+        if (bindingResult.hasFieldErrors("quantity") || checkoutDto.getQuantity() == null) {
+            return;
+        }
+
+        if (tour.getCapacity() == null || tour.getCapacity() <= 0) {
+            bindingResult.rejectValue("quantity", "checkout.quantity.soldOut",
+                    "This tour is fully booked");
+            return;
+        }
+
+        if (checkoutDto.getQuantity() > tour.getCapacity()) {
+            bindingResult.rejectValue("quantity", "checkout.quantity.capacity",
+                    "Quantity must be less than or equal to current capacity");
+        }
     }
 }

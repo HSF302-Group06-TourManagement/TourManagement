@@ -52,10 +52,15 @@
             <div class="col" th:each="tour, iterStat : ${tours}">
                 <div class="adventure-card">
                     <div class="card-img-wrapper">
-                        <!-- Image selector according to index -->
-                        <img th:if="${iterStat.count % 3 == 1}" th:src="@{/images/mucangchai.jpg}" alt="Tour Image" class="img-fluid">
-                        <img th:if="${iterStat.count % 3 == 2}" th:src="@{/images/fansipan.jpg}" alt="Tour Image" class="img-fluid">
-                        <img th:if="${iterStat.count % 3 == 0}" th:src="@{/images/trangan.jpg}" alt="Tour Image" class="img-fluid">
+                        <!-- Uu tien anh Cloudinary cua tour; neu chua co thi dung anh static hien co. -->
+                        <img th:if="${tour.imageUrl != null and !tour.imageUrl.isBlank()}"
+                             th:src="${tour.imageUrl}" alt="Tour Image" class="img-fluid">
+                        <img th:if="${(tour.imageUrl == null or tour.imageUrl.isBlank()) and iterStat.count % 3 == 1}"
+                             th:src="@{/images/mucangchai.jpg}" alt="Tour Image" class="img-fluid">
+                        <img th:if="${(tour.imageUrl == null or tour.imageUrl.isBlank()) and iterStat.count % 3 == 2}"
+                             th:src="@{/images/fansipan.jpg}" alt="Tour Image" class="img-fluid">
+                        <img th:if="${(tour.imageUrl == null or tour.imageUrl.isBlank()) and iterStat.count % 3 == 0}"
+                             th:src="@{/images/trangan.jpg}" alt="Tour Image" class="img-fluid">
                         
                         <div class="card-badge badge-trending" th:if="${iterStat.count % 2 == 1}">Trending</div>
                         <div class="card-badge badge-bestseller" th:if="${iterStat.count % 2 == 0}">Best Seller</div>
@@ -75,7 +80,7 @@
                                 <h3 class="h5 fw-bold font-display mb-0 text-dark" th:text="${tour.tourName}">Tour Name</h3>
                             </div>
                             <div class="text-end">
-                                <span class="fw-bold text-primary fs-4" th:text="${#numbers.formatDecimal(tour.price, 1, 'COMMA', 2, 'POINT') + ' $'}">$650</span>
+                                <span class="fw-bold text-primary fs-4" th:text="${#numbers.formatDecimal(tour.price, 1, 'COMMA', 2, 'POINT') + ' VND'}">650 VND</span>
                             </div>
                         </div>
 
@@ -121,8 +126,8 @@
                                 <h3 class="h5 fw-bold font-display mb-0">Mù Cang Chải Rice Terraces</h3>
                             </div>
                             <div class="text-end">
-                                <span class="d-block text-muted text-decoration-line-through small">$1,200</span>
-                                <span class="fw-bold text-primary fs-4">$650</span>
+                                <span class="d-block text-muted text-decoration-line-through small">1,200 VND</span>
+                                <span class="fw-bold text-primary fs-4">650 VND</span>
                             </div>
                         </div>
 
@@ -159,8 +164,8 @@
                                 <h3 class="h5 fw-bold font-display mb-0">Fansipan Summit Adventure</h3>
                             </div>
                             <div class="text-end">
-                                <span class="d-block text-muted text-decoration-line-through small">$2,500</span>
-                                <span class="fw-bold text-primary fs-4">$780</span>
+                                <span class="d-block text-muted text-decoration-line-through small">2,500 VND</span>
+                                <span class="fw-bold text-primary fs-4">780 VND</span>
                             </div>
                         </div>
 

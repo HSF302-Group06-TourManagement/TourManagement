@@ -8,6 +8,7 @@ public class PaymentResultDto {
     private String responseCode;
     private String message;
     private String amount;
+    private Integer tourId;
 
     public boolean isSuccess() {
         return success;
@@ -55,5 +56,13 @@ public class PaymentResultDto {
 
     public void setAmount(String amount) {
         this.amount = amount;
+    }
+
+    public Integer getTourId() {
+        return tourId;
+    }
+
+    public void setTourId(Integer tourId) {
+        this.tourId = tourId;
     }
 }

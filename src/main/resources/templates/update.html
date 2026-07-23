@@ -15,8 +15,10 @@
         <h2 class="sub-title">Update Tour</h2>
 
         <!-- Form update dung id trong URL de controller biet ban ghi can sua. -->
-        <form th:action="@{/tours/{id}/update(id=${tour.id})}" th:object="${tour}" method="post" class="row g-3" novalidate>
+        <form th:action="@{/tours/{id}/update(id=${tour.id})}" th:object="${tour}" method="post"
+              enctype="multipart/form-data" class="row g-3" novalidate>
             <input type="hidden" th:field="*{id}">
+            <input type="hidden" th:field="*{imageUrl}">
 
             <div class="col-md-6">
                 <label for="tourName" class="form-label">Tour Name</label>
@@ -60,13 +62,13 @@
 
             <div class="col-md-6">
                 <label for="price" class="form-label">Price</label>
-                <!-- Dat ky hieu $ o cuoi o nhap bang input-group, field price van chi submit gia tri so. -->
+                <!-- Dat don vi VND o cuoi o nhap bang input-group, field price van chi submit gia tri so. -->
                 <div class="input-group has-validation">
                     <input type="text" id="price" th:field="*{price}" class="form-control"
                            th:classappend="${#fields.hasErrors('price')} ? 'is-invalid'">
-                    <span class="input-group-text">$</span>
+                    <span class="input-group-text">VND</span>
+                    <div class="invalid-feedback" th:errors="*{price}"></div>
                 </div>
-                <div class="invalid-feedback" th:errors="*{price}"></div>
             </div>
 
             <div class="col-md-6">
@@ -77,6 +79,19 @@
                     <option th:each="item : ${statuses}" th:value="${item.status()}" th:text="${item.statusDesc()}"></option>
                 </select>
                 <div class="invalid-feedback" th:errors="*{status}"></div>
+            </div>
+
+            <div class="col-12" th:if="${tour.imageUrl != null and !tour.imageUrl.isBlank()}">
+                <label class="form-label">Current Image</label>
+                <div>
+                    <img class="tour-image-preview" th:src="${tour.imageUrl}" alt="Current tour image">
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label for="imageFile" class="form-label">New Tour Image</label>
+                <!-- Neu khong chon anh moi, service se giu lai imageUrl hien tai. -->
+                <input type="file" id="imageFile" name="imageFile" class="form-control" accept="image/*">
             </div>
 
             <div class="col-12">

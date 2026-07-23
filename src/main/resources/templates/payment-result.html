@@ -26,14 +26,19 @@
             <dt class="col-sm-3">Transaction Ref</dt>
             <dd class="col-sm-9" th:text="${result.transactionRef}"></dd>
 
-            <dt class="col-sm-3">Response Code</dt>
-            <dd class="col-sm-9" th:text="${result.responseCode}"></dd>
-
             <dt class="col-sm-3">Amount</dt>
             <dd class="col-sm-9" th:text="${result.amount}"></dd>
 
             <dt class="col-sm-3">Valid Signature</dt>
             <dd class="col-sm-9" th:text="${result.validSignature ? 'Yes' : 'No'}"></dd>
+
+            <dt class="col-sm-3" th:if="${result.success}">Booked Tour</dt>
+            <dd class="col-sm-9" th:if="${result.success}">
+                <a class="btn btn-outline-primary btn-sm"
+                   th:href="@{/payment/booked-tour/{txnRef}(txnRef=${result.transactionRef})}">
+                    View booked tour detail
+                </a>
+            </dd>
         </dl>
 
         <a class="btn btn-primary" th:href="@{/tours}">Back to List</a>
