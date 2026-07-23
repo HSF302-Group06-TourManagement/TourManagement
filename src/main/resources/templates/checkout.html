@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Checkout Tour</title>
+    <link rel="stylesheet" th:href="@{/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<div class="container">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="custom-panel mt-4">
+        <h2 class="sub-title">Checkout Tour</h2>
+
+        <div class="alert alert-warning" th:if="${!vnPayEnabled}">
+            VNPay credentials are not configured. This checkout will run in demo mode.
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-5">
+                <div class="border rounded p-3 h-100">
+                    <h3 class="h5 mb-3">Tour Summary</h3>
+                    <p class="mb-2"><strong>Name:</strong> <span th:text="${tour.tourName}"></span></p>
+                    <p class="mb-2"><strong>Destination:</strong> <span th:text="${tour.destination}"></span></p>
+                    <p class="mb-2"><strong>Duration:</strong> <span th:text="${tour.duration + ' days'}"></span></p>
+                    <p class="mb-2"><strong>Start Date:</strong> <span th:text="${#temporals.format(tour.startDate, 'dd/MM/yyyy')}"></span></p>
+                    <p class="mb-0"><strong>Price:</strong> <span th:text="${#numbers.formatDecimal(tour.price, 1, 'COMMA', 2, 'POINT') + ' $'}"></span></p>
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <form th:action="@{/tours/{id}/checkout(id=${tour.id})}" th:object="${checkout}" method="post" class="row g-3" novalidate>
+                    <div class="col-md-6">
+                        <label for="customerName" class="form-label">Customer Name</label>
+                        <input type="text" id="customerName" th:field="*{customerName}" class="form-control"
+                               th:classappend="${#fields.hasErrors('customerName')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{customerName}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="customerPhone" class="form-label">Phone</label>
+                        <input type="text" id="customerPhone" th:field="*{customerPhone}" class="form-control"
+                               th:classappend="${#fields.hasErrors('customerPhone')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{customerPhone}"></div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label for="customerEmail" class="form-label">Email</label>
+                        <input type="text" id="customerEmail" th:field="*{customerEmail}" class="form-control"
+                               th:classappend="${#fields.hasErrors('customerEmail')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{customerEmail}"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="text" id="quantity" th:field="*{quantity}" class="form-control"
+                               th:classappend="${#fields.hasErrors('quantity')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{quantity}"></div>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Pay Now</button>
+                        <a class="btn btn-secondary" th:href="@{/tours/{id}(id=${tour.id})}">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/bootstrap.bundle.js}"></script>
+</body>
+</html>
