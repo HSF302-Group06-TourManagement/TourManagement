@@ -1,4 +1,4 @@
-# <span style="color:#0d6efd">Mô Tả Dự Án Quản Lý Tour</span>
+# <span style="color:#0d6efd">Mô Tả Dự Án TourMangement</span>
 
 > <span style="color:#495057">Dự án là một ứng dụng web dùng để quản lý thông tin các tour du lịch. Hệ thống hỗ trợ xem danh sách tour, xem chi tiết, thêm mới, cập nhật, xóa tour, tìm kiếm theo điểm đến, thanh toán thử nghiệm qua VNPay Sandbox và hỗ trợ tư vấn tour bằng AI chatbot.</span>
 
